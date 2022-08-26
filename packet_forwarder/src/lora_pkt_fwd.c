@@ -3360,7 +3360,7 @@ static void gps_process_sync(void) {
 
     /* try to update time reference with the new GPS time & timestamp */
     pthread_mutex_lock(&mx_timeref);
-    i = lgw_gps_sync(&time_reference_gps, trig_tstamp, utc, gps_time);
+    i = lgw_gps_sync(&time_reference_gps, trig_tstamp, utc, utc);
     pthread_mutex_unlock(&mx_timeref);
     if (i != LGW_GPS_SUCCESS) {
         MSG("WARNING: [gps] GPS out of sync, keeping previous time reference\n");
@@ -3453,6 +3453,7 @@ void thread_gps(void) {
                         frame_size = 0;
                     } else if (latest_msg == NMEA_RMC) { /* Get location from RMC frames */
                         gps_process_coords();
+			gps_process_sync();
                     }
                 }
             }

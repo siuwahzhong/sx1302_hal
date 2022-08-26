@@ -350,10 +350,11 @@ int lgw_gps_enable(char *tty_path, char *gps_family, speed_t target_brate, int *
 
     /* Send UBX CFG NAV-TIMEGPS message to tell GPS module to output native GPS time */
     /* This is a binary message, serial port has to be properly configured to handle this */
-    num_written = write (gps_tty_dev, ubx_cmd_timegps, UBX_MSG_NAVTIMEGPS_LEN);
-    if (num_written != UBX_MSG_NAVTIMEGPS_LEN) {
-        DEBUG_MSG("ERROR: Failed to write on serial port (written=%d)\n", (int) num_written);
-    }
+    /* dont write ubx command to L76x*/
+    //num_written = write (gps_tty_dev, ubx_cmd_timegps, UBX_MSG_NAVTIMEGPS_LEN);
+    //if (num_written != UBX_MSG_NAVTIMEGPS_LEN) {
+    //    DEBUG_MSG("ERROR: Failed to write on serial port (written=%d)\n", (int) num_written);
+    //}
 
     /* get timezone info */
     tzset();
@@ -531,11 +532,13 @@ enum gps_msg lgw_parse_nmea(const char *serial_buff, int buff_size) {
         NMEA sentence format: $xxRMC,time,status,lat,NS,long,EW,spd,cog,date,mv,mvEW,posMode*cs<CR><LF>
         Valid fix: $GPRMC,083559.34,A,4717.11437,N,00833.91522,E,0.004,77.52,091202,,,A*00
         No fix: $GPRMC,,V,,,,,,,,,,N*00
+	support NMEA 4.10 , changes the judgment condition of nb_fields 
+
         */
         memcpy(parser_buf, serial_buff, buff_size);
         parser_buf[buff_size] = '\0';
         nb_fields = str_chop(parser_buf, buff_size, ',', str_index, ARRAY_SIZE(str_index));
-        if (nb_fields != 13) {
+        if (nb_fields < 13 || nb_fields >14) {
             DEBUG_MSG("Warning: invalid RMC sentence (number of fields)\n");
             return IGNORED;
         }
